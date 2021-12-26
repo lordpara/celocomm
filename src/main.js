@@ -91,7 +91,7 @@ async function supportCommunity(index) {
 
   try {
     const result = await contract.methods
-      .addCommunity(...params)
+      .supportCommunity(...params)
       .send({ from: kit.defaultAccount });
 
     notification(`🎉 You successfully supported "${communities[index].name}".`);
