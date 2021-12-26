@@ -210,7 +210,7 @@ window.addEventListener("load", async () => {
         supportBtn.addEventListener("click", async () => {
           const index = supportBtn.getAttribute("index-value");
 
-          await supportImage(parseInt(index));
+          await supportCommunity(parseInt(index));
         });
       });
     }
