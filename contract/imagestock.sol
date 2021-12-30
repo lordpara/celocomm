@@ -3,15 +3,15 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 interface IERC20Token {
-  function transfer(address, uint256) external returns (bool);
-  function approve(address, uint256) external returns (bool);
-  function transferFrom(address, address, uint256) external returns (bool);
-  function totalSupply() external view returns (uint256);
-  function balanceOf(address) external view returns (uint256);
-  function allowance(address, address) external view returns (uint256);
+    function transfer(address, uint256) external returns (bool);
+    function approve(address, uint256) external returns (bool);
+    function transferFrom(address, address, uint256) external returns (bool);
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address) external view returns (uint256);
+    function allowance(address, address) external view returns (uint256);
 
-  event Transfer(address indexed from, address indexed to, uint256 value);
-  event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
 library SafeMath {
@@ -163,6 +163,7 @@ contract CeloComm {
     using SafeMath for uint;
     uint internal communityCount = 0;
     address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    address public adminAddress;
 
     struct Community {
         address payable admin;
@@ -175,9 +176,19 @@ contract CeloComm {
 
     mapping (uint => Community) internal communities;
 
+    constructor(){
+        adminAddress = msg.sender;
+    }
+
     // admin modifier
     modifier onlyAdmin(uint _index) {
-        require(communities[_index].admin == payable(msg.sender), 'only admin can modify parameters');
+        require(communities[_index].admin == msg.sender || adminAddress == msg.sender, 'only admin can modify parameters');
+        _;
+    }
+
+    // owner of contract modifier
+    modifier onlyOwner() {
+        require(adminAddress == msg.sender, 'only admin can modify parameters');
         _;
     }
 
@@ -201,41 +212,39 @@ contract CeloComm {
     // get a certain community
     function fetchCommunity(uint _index) public view returns (
         address payable,
-        string memory, 
-        string memory, 
+        string memory,
+        string memory,
         string memory,
         uint,
         uint
     ) {
         return (
-            communities[_index].admin,
-            communities[_index].name, 
-            communities[_index].image,
-            communities[_index].description,
-            communities[_index].raised,
-            communities[_index].supporters
+        communities[_index].admin,
+        communities[_index].name,
+        communities[_index].image,
+        communities[_index].description,
+        communities[_index].raised,
+        communities[_index].supporters
         );
     }
-    
+
     // support community
     function supportCommunity(uint _index, uint _amount) public payable  {
-
+        address _admin = communities[_index].admin;
         require(
-                IERC20Token(cUsdTokenAddress).transferFrom(
-                msg.sender,
-                communities[_index].admin,
-                _amount), "Transfer failed."
-            );
+            IERC20Token(cUsdTokenAddress).transferFrom(
+                msg.sender, _admin, _amount), "Transfer failed."
+        );
 
         communities[_index].supporters.add(1);
         communities[_index].raised.add(_amount);
     }
-    
+
     // get number of communities
     function getCommunityCount() public view returns (uint) {
         return (communityCount);
     }
-    
+
     // edit community parameters
     function editCommunity(
         uint _index,
@@ -247,12 +256,18 @@ contract CeloComm {
         communities[_index].image = _image;
         communities[_index].description = _description;
     }
-    
+
     // transfer ownership to another admin
     function makeAdmin(uint _index, address _newAdmin) onlyAdmin(_index) public {
-         require(_newAdmin != address(0), "new owner cannot be the zero address");
+        require(_newAdmin != address(0), "new owner cannot be the zero address");
 
-        communities[_index].admin = payable(_newAdmin); 
+        communities[_index].admin = payable(_newAdmin);
 
+    }
+
+
+    //transfer ownership of contract
+    function revokeOwnership( address _address) onlyOwner public {
+        adminAddress  = _address;
     }
 }
