@@ -169,6 +169,7 @@ contract CeloComm {
         string name;
         string image;
         string description;
+        uint goal;
         uint supporters;
         uint raised;
     }
@@ -185,13 +186,15 @@ contract CeloComm {
     function addCommunity(
         string memory _name,
         string memory _image,
-        string memory _description
+        string memory _description,
+        uint _goal
     ) public {
         communities[communityCount] = Community(
             payable(msg.sender),
             _name,
             _image,
             _description,
+            _goal,
             0,
             0
         );
@@ -205,6 +208,7 @@ contract CeloComm {
         string memory, 
         string memory,
         uint,
+        uint,
         uint
     ) {
         return (
@@ -212,6 +216,7 @@ contract CeloComm {
             communities[_index].name, 
             communities[_index].image,
             communities[_index].description,
+            communities[_index].goal,
             communities[_index].raised,
             communities[_index].supporters
         );
