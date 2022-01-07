@@ -3,11 +3,9 @@ import { newKitFromWeb3 } from "@celo/contractkit";
 import BigNumber from "bignumber.js";
 import erc20Abi from "../contract/erc20.abi.json";
 import CeloCommAbi from "../contract/celoComm.abi.json";
+import {CeloCommContractAddressAbi, cUSDContractAddress, ERC20_DECIMALS} from "./utils/constants";
 require("arrive");
 
-const ERC20_DECIMALS = 18;
-const cUSDContractAddress = "0xb053651858F145b3127504C1045a1FEf8976BFfB";
-const CeloCommContractAddressAbi = "0xc7109a3db117b3EE8b180e4f92Eae2e1Dc8e16E6";
 
 let kit;
 let contract;
@@ -41,6 +39,7 @@ async function approve(_price) {
   const result = await cUSDContract.methods
     .approve(CeloCommContractAddressAbi, _price)
     .send({ from: kit.defaultAccount });
+
   return result;
 }
 
@@ -71,6 +70,8 @@ document.querySelector("#newCommunityBtn").addEventListener("click", async (e) =
 });
 
 async function supportCommunity(index) {
+
+  try {
   const amount = new BigNumber(
     document.getElementById(`supportAmount${index}`).value
   )
@@ -80,27 +81,25 @@ async function supportCommunity(index) {
   const params = [index, amount];
 
   notification("⌛ Waiting for payment approval...");
-  try {
+
     await approve(amount);
-  } catch (error) {
-    notification(`⚠️ ${error}.`);
-    console.log(error);
-  }
+
 
   notification(`⌛ Awaiting payment for "${communities[index].name}"...`);
-
-  try {
     const result = await contract.methods
       .supportCommunity(...params)
       .send({ from: kit.defaultAccount });
+
+  } catch (error) {
+    notification(`⚠️ ${error}.`);
+    console.log({error})
+  }
 
     notification(`🎉 You successfully supported "${communities[index].name}".`);
 
     getCommunities();
     getBalance();
-  } catch (error) {
-    notification(`⚠️ ${error}.`);
-  }
+
 }
 
 const getCommunities = async function () {
